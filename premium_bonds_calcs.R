@@ -34,12 +34,12 @@ pot_vec = c()
 # outside of function test
 
 for (m in 1:months){
-  
+
   # initiate pot
   if (m == 1){
     
     pot = starting_pot
-    
+    # print(pot)
   }
   
   print(paste('Month:', m))
@@ -49,7 +49,7 @@ for (m in 1:months){
     .y = pb_df$prize,
     .f = function(odds, prize){
       # this is assuming you can win multiple on one entry
-      print(paste(pot))
+      # print(paste(pot))
       entries = pot/25
       
       # give 1 or 0 from odds
@@ -138,10 +138,10 @@ premium_bonds_estimator = function(starting_pot, months){
 
 ## test run
 runs = 10
-starting_pot = 5000
+starting_pot = 50000
 months = 5*12
 
-pb_run1_df = replicate(runs, premium_bonds_estimator(starting_pot = starting_pot, months = months), simplify = F) %>%
+pb_mc_df = replicate(runs, premium_bonds_estimator(starting_pot = starting_pot, months = months), simplify = F) %>%
   map2_df(
     .x = .,
     .y = 1:runs,
@@ -152,20 +152,18 @@ pb_run1_df = replicate(runs, premium_bonds_estimator(starting_pot = starting_pot
     
   })
 
-ggplot(data = pb_run1_df,
+ggplot(data = pb_mc_df,
        mapping = aes(x = month, y = pot, col = run, group = run)) +
   geom_line(show.legend = FALSE) +
   labs(x = 'Months',
        y = 'Total Pot',
        title = 'Premium Bonds Expected Earnings over five years')
 
-average_earnings = test %>%
+pb_mc_df %>%
   group_by(run) %>%
-  summarise(total_returns = sum(winnings)) %>%
-  pull('total_returns') %>%
-  mean()
-
-print(paste0('Average Earnings (as percentage of starting capital) in ', months, ' month period is: ',average_earnings*100/starting_pot, '%'))
+  summarise(tot_earnings = sum(winnings, na.rm = T),
+            avg_earnings_year = tot_earnings/(months/12),
+            avg_earnings_month = avg_earnings_year/12)
 
 
 ######### Optimizing
